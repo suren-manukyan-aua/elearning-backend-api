@@ -1,0 +1,1280 @@
+## This file has been generated using a Large Language Model
+
+openapi: 3.0.3
+info:
+  title: E-Learning Platform API
+  description: |
+    RESTful API for an E-Learning Platform built with Haskell and Servant.
+    
+    Each endpoint maps to a specific requirement from the Phase 3 document
+  version: 1.0.0
+  contact:
+    name: Database Systems Project
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+tags:
+  - name: Students
+    description: Student management
+  - name: Instructors
+    description: Instructor management
+  - name: Administrators
+    description: Administrator management
+  - name: Courses
+    description: Course management
+  - name: Enrollments
+    description: Enrollment operations
+  - name: Assignments
+    description: Homework assignments
+  - name: Submissions
+    description: Homework submissions
+  - name: Quizzes
+    description: Quiz management
+  - name: Quiz Attempts
+    description: Taking quizzes
+  - name: Forum Posts
+    description: Discussion forums
+  - name: Reports
+    description: Analytics and reports
+
+paths:
+  # ========== STUDENTS ==========
+  /students:
+    get:
+      tags: [Students]
+      summary: List all students
+      responses:
+        '200':
+          description: List of students
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Student'
+    post:
+      tags: [Students]
+      summary: Register a new student
+      description: |
+        **Phase 3 Requirement #1:** As an administrator, create a new user account with a specified role (Student).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStudent'
+            example:
+              email: "newstudent@example.com"
+              password: "securepass123"
+              first_name: "John"
+              last_name: "Doe"
+              enrollment_date: "2025-01-15"
+              major: "Computer Science"
+              level: "Undergraduate"
+      responses:
+        '200':
+          description: Student created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseInt'
+
+  /students/{id}:
+    get:
+      tags: [Students]
+      summary: Get student by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Student details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseStudent'
+
+  /students/{id}/courses:
+    get:
+      tags: [Students]
+      summary: View student's courses
+      description: |
+        **Phase 3 Requirement #14:** As a student, view all the courses I'm registered for.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of enrolled courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StudentCourse'
+
+  # ========== INSTRUCTORS ==========
+  /instructors:
+    post:
+      tags: [Instructors]
+      summary: Register a new instructor
+      description: |
+        **Phase 3 Requirement #1:** As an administrator, create a new user account with a specified role (Instructor).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInstructor'
+            example:
+              email: "prof.smith@example.com"
+              password: "securepass123"
+              first_name: "Jane"
+              last_name: "Smith"
+              department: "Computer Science"
+              qualification: "PhD"
+              office: "CS-301"
+      responses:
+        '200':
+          description: Instructor created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseInt'
+
+  # ========== ADMINISTRATORS ==========
+  /administrators:
+    post:
+      tags: [Administrators]
+      summary: Register a new administrator
+      description: |
+        **Phase 3 Requirement #1:** As an administrator, create a new user account with a specified role (Admin).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAdmin'
+            example:
+              email: "admin@example.com"
+              password: "securepass123"
+              first_name: "Admin"
+              last_name: "User"
+              level: "mid"
+      responses:
+        '200':
+          description: Administrator created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseInt'
+
+  # ========== COURSES ==========
+  /courses:
+    get:
+      tags: [Courses]
+      summary: List all courses
+      responses:
+        '200':
+          description: List of courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Course'
+    post:
+      tags: [Courses]
+      summary: Create a new course
+      description: |
+        **Phase 3 Requirement #2:** As an administrator, add a new course, including its name and description.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCourse'
+            example:
+              title: "Machine Learning"
+              description: "Introduction to ML algorithms"
+              credits: 4
+      responses:
+        '200':
+          description: Course created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseInt'
+
+  /courses/{id}:
+    get:
+      tags: [Courses]
+      summary: Get course by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Course details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseCourse'
+    delete:
+      tags: [Courses]
+      summary: Delete a course
+      description: |
+        **Phase 3 Requirement #23:** System operation — Upon deleting a course, automatically remove all associated enrollments, homework, quizzes, and forum data.
+        
+        This is handled by PostgreSQL CASCADE constraints.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Course deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseText'
+
+  # ========== TEACHES ==========
+  /teaches:
+    post:
+      tags: [Courses]
+      summary: Assign instructor to course section
+      description: |
+        **Phase 3 Requirement #3:** As an administrator, assign one or more instructors to a specific course.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignInstructor'
+            example:
+              instructor_id: 36
+              course_id: 1
+              section_number: 1
+      responses:
+        '200':
+          description: Instructor assigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseText'
+
+  # ========== ENROLLMENTS ==========
+  /enrollments:
+    post:
+      tags: [Enrollments]
+      summary: Enroll student in course section
+      description: |
+        **Phase 3 Requirement #4:** As a student, enroll in an available course.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEnrollment'
+            example:
+              student_id: 5
+              course_id: 1
+              section_number: 1
+              enrollment_date: "2025-03-01"
+      responses:
+        '200':
+          description: Student enrolled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseInt'
+
+  /enrollments/{studentId}:
+    get:
+      tags: [Enrollments]
+      summary: Get student's enrollments
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of enrollments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Enrollment'
+
+  /enrollments/{studentId}/{courseId}/{section}:
+    delete:
+      tags: [Enrollments]
+      summary: Unenroll student from course
+      description: |
+        **Phase 3 Requirement #5:** As a student, unenroll from a course.
+        
+        Sets enrollment status to 'dropped'.
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: section
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Student unenrolled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseText'
+
+  # ========== ASSIGNMENTS ==========
+  /assignments:
+    post:
+      tags: [Assignments]
+      summary: Create homework assignment
+      description: |
+        **Phase 3 Requirement #6:** As an instructor, create a homework assignment for a course, setting its title and due date.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAssignment'
+            example:
+              course_id: 1
+              section_number: 1
+              title: "Homework 2: Recursion"
+              description: "Implement recursive functions"
+              due_date: "2025-04-01"
+              max_points: 100
+              weight: 0.15
+      responses:
+        '200':
+          description: Assignment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseInt'
+
+  # ========== SUBMISSIONS ==========
+  /submissions:
+    post:
+      tags: [Submissions]
+      summary: Submit homework
+      description: |
+        **Phase 3 Requirement #7:** As a student, submit work for a homework assignment.
+        
+        ⚠️ Database trigger ensures student is enrolled in the assignment's section.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSubmission'
+            example:
+              assignment_id: 1
+              student_id: 1
+      responses:
+        '200':
+          description: Submission created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseInt'
+
+  /submissions/assignment/{assignmentId}:
+    get:
+      tags: [Submissions]
+      summary: View submissions for assignment
+      description: |
+        **Phase 3 Requirement #10:** As an instructor, view a student's submission.
+      parameters:
+        - name: assignmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of submissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Submission'
+
+  /submissions/{id}/grade:
+    put:
+      tags: [Submissions]
+      summary: Grade a submission
+      description: |
+        **Phase 3 Requirement #10:** As an instructor, enter a grade for a submission.
+        
+        ⚠️ Database trigger ensures grade doesn't exceed assignment max_points.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeSubmission'
+            example:
+              grade: 95
+              feedback: "Excellent work!"
+      responses:
+        '200':
+          description: Submission graded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseText'
+
+  # ========== QUIZZES ==========
+  /quizzes:
+    post:
+      tags: [Quizzes]
+      summary: Create a quiz
+      description: |
+        **Phase 3 Requirement #8:** As an instructor, create a quiz for a course.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuiz'
+            example:
+              course_id: 1
+              section_number: 1
+              title: "Midterm Quiz"
+              total_points: 50
+              attempt_limit: 2
+      responses:
+        '200':
+          description: Quiz created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseInt'
+
+  # ========== QUIZ ATTEMPTS ==========
+  /quiz-attempts:
+    post:
+      tags: [Quiz Attempts]
+      summary: Submit quiz attempt
+      description: |
+        **Phase 3 Requirement #9:** As a student, take a quiz.
+        
+        ⚠️ Database triggers enforce:
+        - Score cannot exceed total_points
+        - Number of attempts cannot exceed attempt_limit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuizAttempt'
+            example:
+              quiz_id: 1
+              student_id: 1
+              duration: 1800
+              score: 45
+      responses:
+        '200':
+          description: Quiz attempt recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseInt'
+
+  /quiz-attempts/{quizId}/{studentId}:
+    get:
+      tags: [Quiz Attempts]
+      summary: View quiz attempts and scores
+      description: |
+        **Phase 3 Requirement #9:** As a student, view the final score upon completion.
+      parameters:
+        - name: quizId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of quiz attempts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QuizAttempt'
+
+  # ========== FORUM POSTS ==========
+  /posts:
+    post:
+      tags: [Forum Posts]
+      summary: Create forum post
+      description: |
+        **Phase 3 Requirement #11:** As a student or instructor, create a new post in a course's discussion forum.
+        
+        ⚠️ Database trigger `enforce_post_membership` ensures:
+        - Students can only post in forums for courses they're enrolled in
+        - Instructors can only post in forums for courses they teach
+        - Administrators can post anywhere
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePost'
+            example:
+              forum_id: 1
+              user_id: 1
+              content: "Can someone explain recursion?"
+              parent_post_id: null
+      responses:
+        '200':
+          description: Post created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseInt'
+
+  /posts/forum/{forumId}:
+    get:
+      tags: [Forum Posts]
+      summary: Get posts in forum
+      parameters:
+        - name: forumId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ForumPost'
+
+  # ========== REPORTS ==========
+  /reports/grades/{studentId}:
+    get:
+      tags: [Reports]
+      summary: Student grade report
+      description: |
+        **Phase 3 Requirement #12:** As a student, view a personal grade report showing all courses, assignment grades, and final grades.
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Grade report
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GradeReport'
+
+  /reports/gpa/{studentId}:
+    get:
+      tags: [Reports]
+      summary: Student GPA
+      description: |
+        **Phase 3 Requirement #13:** As a student, view my cumulative Grade Point Average (GPA).
+        
+        Calculated as AVG(grade) / 20.0 to convert to 4.0 scale.
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: GPA value
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDouble'
+
+  /reports/roster/{courseId}/{section}:
+    get:
+      tags: [Reports]
+      summary: Class roster
+      description: |
+        **Phase 3 Requirement #15:** As an instructor or administrator, generate a class roster for a specific course.
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: section
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Class roster
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RosterEntry'
+
+  /reports/missing-submissions/{assignmentId}:
+    get:
+      tags: [Reports]
+      summary: Missing submissions report
+      description: |
+        **Phase 3 Requirement #16:** As an instructor, generate a report of students who have not submitted a specific homework assignment by its due date.
+      parameters:
+        - name: assignmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Students who haven't submitted
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MissingSubmission'
+
+  /reports/enrollment-stats:
+    get:
+      tags: [Reports]
+      summary: Course enrollment statistics
+      description: |
+        **Phase 3 Requirement #17:** As an administrator, generate a report on course enrollment statistics, ordered from most to least popular.
+      responses:
+        '200':
+          description: Enrollment statistics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnrollmentStat'
+
+  /reports/quiz-stats/{quizId}:
+    get:
+      tags: [Reports]
+      summary: Quiz performance statistics
+      description: |
+        **Phase 3 Requirement #18:** As an instructor, analyze the performance on a quiz by viewing the average, highest, and lowest scores.
+      parameters:
+        - name: quizId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Quiz statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseQuizStats'
+
+  /reports/at-risk/{courseId}:
+    get:
+      tags: [Reports]
+      summary: At-risk students report
+      description: |
+        **Phase 3 Requirement #19:** As an instructor, identify at-risk students in a course whose average grade is below a passing threshold.
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: threshold
+          in: query
+          required: false
+          schema:
+            type: number
+            default: 60
+          description: Grade threshold (default 60)
+      responses:
+        '200':
+          description: At-risk students
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AtRiskStudent'
+
+  /reports/instructor-workload:
+    get:
+      tags: [Reports]
+      summary: Instructor workload report
+      description: |
+        **Phase 3 Requirement #20:** As an administrator, generate an instructor workload report showing the number of courses each is currently teaching.
+      responses:
+        '200':
+          description: Instructor workload
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InstructorWorkload'
+
+  /reports/forum-activity/{courseId}:
+    get:
+      tags: [Reports]
+      summary: Forum activity report
+      description: |
+        **Phase 3 Requirement #21:** As an instructor or administrator, generate a forum activity report to identify the most active users in a course.
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Forum activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ForumActivity'
+
+  /reports/platform-activity:
+    get:
+      tags: [Reports]
+      summary: Platform-wide activity summary
+      description: |
+        **Phase 3 Requirement #22:** As an administrator, generate a platform-wide activity summary detailing new enrollments, submissions, and posts over a specific time period.
+      parameters:
+        - name: start
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          example: "2025-01-01"
+        - name: end
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          example: "2025-12-31"
+      responses:
+        '200':
+          description: Platform activity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePlatformActivity'
+
+components:
+  schemas:
+    # ===== Request Bodies =====
+    CreateStudent:
+      type: object
+      required: [email, password, first_name, last_name, enrollment_date, major, level]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        enrollment_date:
+          type: string
+          format: date
+        major:
+          type: string
+        level:
+          type: string
+
+    CreateInstructor:
+      type: object
+      required: [email, password, first_name, last_name, department]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        department:
+          type: string
+        qualification:
+          type: string
+        office:
+          type: string
+
+    CreateAdmin:
+      type: object
+      required: [email, password, first_name, last_name, level]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        level:
+          type: string
+          enum: [low, mid, high]
+
+    CreateCourse:
+      type: object
+      required: [title, credits]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        credits:
+          type: integer
+
+    AssignInstructor:
+      type: object
+      required: [instructor_id, course_id, section_number]
+      properties:
+        instructor_id:
+          type: integer
+        course_id:
+          type: integer
+        section_number:
+          type: integer
+
+    CreateEnrollment:
+      type: object
+      required: [student_id, course_id, section_number, enrollment_date]
+      properties:
+        student_id:
+          type: integer
+        course_id:
+          type: integer
+        section_number:
+          type: integer
+        enrollment_date:
+          type: string
+          format: date
+
+    CreateAssignment:
+      type: object
+      required: [course_id, section_number, title, max_points]
+      properties:
+        course_id:
+          type: integer
+        section_number:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        due_date:
+          type: string
+          format: date
+        max_points:
+          type: integer
+        weight:
+          type: number
+
+    CreateSubmission:
+      type: object
+      required: [assignment_id, student_id]
+      properties:
+        assignment_id:
+          type: integer
+        student_id:
+          type: integer
+
+    GradeSubmission:
+      type: object
+      required: [grade]
+      properties:
+        grade:
+          type: number
+        feedback:
+          type: string
+
+    CreateQuiz:
+      type: object
+      required: [course_id, section_number, title, total_points, attempt_limit]
+      properties:
+        course_id:
+          type: integer
+        section_number:
+          type: integer
+        title:
+          type: string
+        total_points:
+          type: integer
+        attempt_limit:
+          type: integer
+
+    CreateQuizAttempt:
+      type: object
+      required: [quiz_id, student_id, duration]
+      properties:
+        quiz_id:
+          type: integer
+        student_id:
+          type: integer
+        duration:
+          type: integer
+        score:
+          type: number
+
+    CreatePost:
+      type: object
+      required: [forum_id, user_id, content]
+      properties:
+        forum_id:
+          type: integer
+        user_id:
+          type: integer
+        content:
+          type: string
+        parent_post_id:
+          type: integer
+
+    # ===== Response Bodies =====
+    Student:
+      type: object
+      properties:
+        studentId:
+          type: integer
+        studentEmail:
+          type: string
+        studentFirstName:
+          type: string
+        studentLastName:
+          type: string
+        studentGpa:
+          type: number
+        studentMajor:
+          type: string
+        studentLevel:
+          type: string
+        studentCredits:
+          type: integer
+
+    Course:
+      type: object
+      properties:
+        courseId:
+          type: integer
+        courseTitle:
+          type: string
+        courseDescription:
+          type: string
+        courseCredits:
+          type: integer
+
+    StudentCourse:
+      type: object
+      properties:
+        scCourseId:
+          type: integer
+        scTitle:
+          type: string
+        scStatus:
+          type: string
+
+    Enrollment:
+      type: object
+      properties:
+        enrollmentId:
+          type: integer
+        enStudentId:
+          type: integer
+        enCourseId:
+          type: integer
+        enSectionNumber:
+          type: integer
+        enEnrollmentDate:
+          type: string
+          format: date
+        enFinalGrade:
+          type: number
+        enStatus:
+          type: string
+
+    Submission:
+      type: object
+      properties:
+        submissionId:
+          type: integer
+        subAssignmentId:
+          type: integer
+        subStudentId:
+          type: integer
+        submittedAt:
+          type: string
+          format: date-time
+        subGrade:
+          type: number
+        subFeedback:
+          type: string
+
+    QuizAttempt:
+      type: object
+      properties:
+        attemptId:
+          type: integer
+        qaQuizId:
+          type: integer
+        qaStudentId:
+          type: integer
+        attemptTime:
+          type: string
+          format: date-time
+        qaScore:
+          type: number
+        qaDuration:
+          type: integer
+
+    ForumPost:
+      type: object
+      properties:
+        postId:
+          type: integer
+        fpForumId:
+          type: integer
+        fpUserId:
+          type: integer
+        fpContent:
+          type: string
+        postedAt:
+          type: string
+          format: date-time
+        parentPostId:
+          type: integer
+
+    GradeReport:
+      type: object
+      properties:
+        grCourseTitle:
+          type: string
+        grAssignmentId:
+          type: integer
+        grAssignmentTitle:
+          type: string
+        grGrade:
+          type: number
+
+    RosterEntry:
+      type: object
+      properties:
+        reUserId:
+          type: integer
+        reFirstName:
+          type: string
+        reLastName:
+          type: string
+
+    MissingSubmission:
+      type: object
+      properties:
+        msUserId:
+          type: integer
+        msFirstName:
+          type: string
+        msLastName:
+          type: string
+
+    EnrollmentStat:
+      type: object
+      properties:
+        esCourseId:
+          type: integer
+        esTitle:
+          type: string
+        esEnrollCount:
+          type: integer
+
+    QuizStats:
+      type: object
+      properties:
+        qsAvgScore:
+          type: number
+        qsHighScore:
+          type: number
+        qsLowScore:
+          type: number
+
+    AtRiskStudent:
+      type: object
+      properties:
+        arsUserId:
+          type: integer
+        arsFirstName:
+          type: string
+        arsLastName:
+          type: string
+        arsAvgGrade:
+          type: number
+
+    InstructorWorkload:
+      type: object
+      properties:
+        iwUserId:
+          type: integer
+        iwFirstName:
+          type: string
+        iwLastName:
+          type: string
+        iwCoursesTaught:
+          type: integer
+
+    ForumActivity:
+      type: object
+      properties:
+        faUserId:
+          type: integer
+        faFirstName:
+          type: string
+        faLastName:
+          type: string
+        faPostsCount:
+          type: integer
+
+    PlatformActivity:
+      type: object
+      properties:
+        paNewEnrollments:
+          type: integer
+        paSubmissions:
+          type: integer
+        paPosts:
+          type: integer
+
+    # ===== Generic Responses =====
+    ApiResponseInt:
+      type: object
+      properties:
+        success:
+          type: boolean
+        result:
+          type: integer
+        errMsg:
+          type: string
+
+    ApiResponseText:
+      type: object
+      properties:
+        success:
+          type: boolean
+        result:
+          type: string
+        errMsg:
+          type: string
+
+    ApiResponseDouble:
+      type: object
+      properties:
+        success:
+          type: boolean
+        result:
+          type: number
+        errMsg:
+          type: string
+
+    ApiResponseStudent:
+      type: object
+      properties:
+        success:
+          type: boolean
+        result:
+          $ref: '#/components/schemas/Student'
+        errMsg:
+          type: string
+
+    ApiResponseCourse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        result:
+          $ref: '#/components/schemas/Course'
+        errMsg:
+          type: string
+
+    ApiResponseQuizStats:
+      type: object
+      properties:
+        success:
+          type: boolean
+        result:
+          $ref: '#/components/schemas/QuizStats'
+        errMsg:
+          type: string
+
+    ApiResponsePlatformActivity:
+      type: object
+      properties:
+        success:
+          type: boolean
+        result:
+          $ref: '#/components/schemas/PlatformActivity'
+        errMsg:
+          type: string
